@@ -1,14 +1,31 @@
-import User from "../models/User.js";
+import DailyLog from "../models/DailyLog.js";
 
-export const getAllDrivers = async (req, res) => {
-  const filter = req.query.depot
-    ? { depotName: req.query.depot }
-    : {};
+export const getAdminReport = async (req, res) => {
+  const { from, to, depot } = req.query;
 
-  const drivers = await User.find({
-    role: "DRIVER",
-    ...filter
-  });
+  const filter = depot ? { depotName: depot } : {};
 
-  res.json(drivers);
+  const drivers = await User.find({ role: "DRIVER", ...filter });
+
+  const report = [];
+
+  for (let driver of drivers) {
+    const logs = await DailyLog.find({
+      driverId: driver._id,
+      logDate: {
+        $gte: new Date(from),
+        $lte: new Date(to)
+      }
+    });
+
+    report.push({
+      driverName: driver.name,
+      depot: driver.depotName,
+      totalKm: logs.reduce((s, l) => s + (l.km || 0), 0),
+      totalHours: logs.reduce((s, l) => s + (l.hours || 0), 0),
+      logs
+    });
+  }
+
+  res.json({ from, to, report });
 };

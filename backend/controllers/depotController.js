@@ -37,3 +37,48 @@ export const getDepotDailyLogs = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+
+export const getDepotReport = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    const drivers = await User.find({
+      role: "DRIVER",
+      depotName: req.user.depot
+    });
+
+    const report = [];
+
+    for (let driver of drivers) {
+      const logs = await DailyLog.find({
+        driverId: driver._id,
+        logDate: {
+          $gte: new Date(from),
+          $lte: new Date(to)
+        }
+      });
+
+      const totalHours = logs.reduce((sum, l) => sum + (l.hours || 0), 0);
+      const totalKm = logs.reduce((sum, l) => sum + (l.km || 0), 0);
+
+      report.push({
+        driverName: driver.name,
+        pfNo: driver.pfNo,
+        totalDays: logs.length,
+        totalHours,
+        totalKm,
+        logs
+      });
+    }
+
+    res.json({
+      depot: req.user.depot,
+      from,
+      to,
+      report
+    });
+
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
