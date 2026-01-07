@@ -1,24 +1,29 @@
-// models/DailyLog.js
 import mongoose from "mongoose";
+
 const dailyLogSchema = new mongoose.Schema({
-  driverId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  driverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
 
   logDate: {
     type: Date,
-    default: () => new Date().setHours(0,0,0,0)
+    required: true,
+    index: true
   },
 
-  signInTime: Date,
-  signInStation: String,
+  signInTime: { type: Date, required: true },
+  signInStation: { type: String, required: true },
 
   signOutTime: Date,
   signOutStation: String,
+alcoholConsumed: Boolean,
 
   hours: Number,
   km: Number,
   mileage: Number
 
 }, { timestamps: true });
-
 
 export default mongoose.model("DailyLog", dailyLogSchema);

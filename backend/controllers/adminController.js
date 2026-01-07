@@ -1,61 +1,82 @@
 import User from "../models/User.js";
-import DailyLog from "../models/DailyLog.js";
+import DailyLog from "../models/DailyLog.js";import { generateCSV } from "../utils/reportExporter.js";
 
-export const getAdminUsers = async (req, res) => {
-  try {
-    const { depot } = req.query;
+export const downloadAdminReport = async (req, res) => {
+  const { from, to, depot } = req.query;
 
-    const filter = depot ? { depotName: depot } : {};
+  const start = new Date(from);
+  const end = new Date(to);
+  end.setHours(23, 59, 59, 999);
 
-    const managers = await User.find({
-      role: "DEPOT_MANAGER",
-      ...filter
-    }).select("name email depotName");
+  const filter = depot ? { depotName: depot } : {};
+  const drivers = await User.find({ role: "DRIVER", ...filter });
 
-    const drivers = await User.find({
-      role: "DRIVER",
-      ...filter
-    }).select("name pfNo depotName");
+  const rows = [];
 
-    res.json({
-      managers,
-      drivers
+  for (const d of drivers) {
+    const logs = await DailyLog.find({
+      driverId: d._id,
+      logDate: { $gte: start, $lte: end }
     });
-  } catch (err) {
-    res.status(500).json({ msg: err.message });
+
+    logs.forEach(l => {
+      rows.push({
+        Driver: d.name,
+        PFNo: d.pfNo,
+        Depot: d.depotName,
+        Date: l.logDate.toISOString().substring(0, 10),
+        Hours: l.hours,
+        KM: l.km
+      });
+    });
   }
+
+  const csv = generateCSV(rows);
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", "attachment; filename=admin_report.csv");
+  res.send(csv);
 };
 
 
+export const getAdminUsers = async (req, res) => {
+  const { depot } = req.query;
+  const filter = depot ? { depotName: depot } : {};
+
+  const managers = await User.find({
+    role: "DEPOT_MANAGER",
+    ...filter
+  }).select("name email pfNo depotName");
+
+  const drivers = await User.find({
+    role: "DRIVER",
+    ...filter
+  }).select("name pfNo depotName");
+
+  res.json({ managers, drivers });
+};
 
 export const getAdminReport = async (req, res) => {
   const { from, to, depot } = req.query;
 
-  const filter = depot ? { depotName: depot } : {};
+  const start = new Date(from);
+  const end = new Date(to);
+  end.setHours(23, 59, 59, 999);
 
+  const filter = depot ? { depotName: depot } : {};
   const drivers = await User.find({ role: "DRIVER", ...filter });
 
   const report = [];
 
-  for (let driver of drivers) {
-    const start = new Date(from);
-start.setHours(0, 0, 0, 0);
-
-const end = new Date(to);
-end.setHours(23, 59, 59, 999);
-
-const logs = await DailyLog.find({
-  driverId: driver._id,
-  logDate: {
-    $gte: start,
-    $lte: end
-  }
-});
-
+  for (const d of drivers) {
+    const logs = await DailyLog.find({
+      driverId: d._id,
+      logDate: { $gte: start, $lte: end }
+    });
 
     report.push({
-      driverName: driver.name,
-      depot: driver.depotName,
+      driverName: d.name,
+      depot: d.depotName,
       totalKm: logs.reduce((s, l) => s + (l.km || 0), 0),
       totalHours: logs.reduce((s, l) => s + (l.hours || 0), 0),
       logs

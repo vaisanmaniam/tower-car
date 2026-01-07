@@ -2,24 +2,42 @@ import express from "express";
 import { verifyToken, allowRoles } from "../middleware/auth.js";
 import {
   getDriverProfile,
+  updateBioData,
+  updateTraining,
+  updateLR,
   driverSignIn,
   driverSignOut,
   driverAlerts,
-  updateDriverProfile
+  checkActiveDuty,
+  getDutyStatus
 } from "../controllers/driverController.js";
 
 const router = express.Router();
 
 router.get("/profile", verifyToken, allowRoles("DRIVER"), getDriverProfile);
+
+router.put("/profile/bio", verifyToken, allowRoles("DRIVER"), updateBioData);
+router.put("/profile/training", verifyToken, allowRoles("DRIVER"), updateTraining);
+router.put("/profile/lr", verifyToken, allowRoles("DRIVER"), updateLR);
+
 router.post("/signin", verifyToken, allowRoles("DRIVER"), driverSignIn);
 router.post("/signout", verifyToken, allowRoles("DRIVER"), driverSignOut);
-router.put(
-  "/profile",
-  verifyToken,
-  allowRoles("DRIVER"),
-  updateDriverProfile
-);
 
 router.get("/alerts", verifyToken, allowRoles("DRIVER"), driverAlerts);
+router.get(
+  "/active-duty",
+  verifyToken,
+  allowRoles("DRIVER"),
+  checkActiveDuty
+);
+
+router.get(
+  "/duty-status",
+  verifyToken,
+  allowRoles("DRIVER"),
+  getDutyStatus
+);
+
+
 
 export default router;

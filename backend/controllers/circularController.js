@@ -5,11 +5,12 @@ export const uploadCircular = async (req, res) => {
     const { title } = req.body;
     if (!req.file) return res.status(400).json({ msg: "PDF file is required" });
 
-    const circular = await Circular.create({
-      title,
-      pdfUrl: req.file.path, // Multer + Cloudinary stores URL in path
-      postedBy: req.user.id
-    });
+const circular = await Circular.create({
+  title,
+  pdfUrl: req.file.path, // ✅ Cloudinary URL
+  postedBy: req.user.id
+});
+
 
     res.status(201).json({ msg: "Circular uploaded successfully", circular });
   } catch (err) {

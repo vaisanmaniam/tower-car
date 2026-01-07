@@ -1,86 +1,137 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import Swal from "sweetalert2";
+import { Train, Lock, User } from "lucide-react";
 
 export default function Login() {
   const [pfNo, setPfNo] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const login = async () => {
+    if (!pfNo || !password) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Details",
+        text: "Please enter PF Number and Password",
+        confirmButtonColor: "#1d4ed8",
+      });
+      return;
+    }
+
     try {
+      setLoading(true);
+
       const res = await api.post("/auth/login", { pfNo, password });
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.role);
 
+      await Swal.fire({
+        icon: "success",
+        title: "Login Successful",
+        text: "Welcome to Railway Management System",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+
       if (res.data.role === "DRIVER") navigate("/driver");
       if (res.data.role === "DEPOT_MANAGER") navigate("/manager");
       if (res.data.role === "SUPER_ADMIN") navigate("/admin");
     } catch (err) {
-      alert(err.response?.data?.msg || "Login failed");
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: err.response?.data?.msg || "Invalid PF Number or Password",
+        confirmButtonColor: "#dc2626",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
-      
-      {/* CARD */}
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8">
+
+      {/* LOGIN CARD */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 sm:p-10 relative overflow-hidden">
+
+        {/* TOP STRIP */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-700" />
 
         {/* HEADER */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-3">
+            <div className="p-3 rounded-full bg-blue-100">
+              <Train className="text-blue-700" size={28} />
+            </div>
+          </div>
           <h1 className="text-2xl font-bold text-gray-800">
             Railway Management System
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Secure Login Portal
+            Secure Access Portal
           </p>
         </div>
 
         {/* FORM */}
-        <div className="space-y-5">
+        <div className="space-y-6">
 
           {/* PF NUMBER */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
               PF Number
             </label>
-            <input
-              type="text"
-              placeholder="Enter PF Number"
-              value={pfNo}
-              onChange={e => setPfNo(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
+            <div className="relative">
+              <User className="absolute left-3 top-2.5 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Enter PF Number"
+                value={pfNo}
+                onChange={(e) => setPfNo(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
+              />
+            </div>
           </div>
 
           {/* PASSWORD */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
               Password
             </label>
-            <input
-              type="password"
-              placeholder="Enter Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
+            <div className="relative">
+              <Lock className="absolute left-3 top-2.5 text-gray-400" size={18} />
+              <input
+                type="password"
+                placeholder="Enter Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none transition"
+              />
+            </div>
           </div>
 
           {/* LOGIN BUTTON */}
           <button
             onClick={login}
-            className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 shadow-md"
+            disabled={loading}
+            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-white transition
+              ${
+                loading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-700 hover:bg-blue-800 active:scale-[0.98]"
+              }`}
           >
-            Login
+            {loading ? "Signing In..." : "Login Securely"}
           </button>
         </div>
 
         {/* FOOTER */}
-        <div className="text-center mt-6 text-xs text-gray-400">
-          © {new Date().getFullYear()} Indian Railways • Secure Access
+        <div className="text-center mt-8 text-xs text-gray-400">
+          © {new Date().getFullYear()} Indian Railways <br />
+          Authorized Personnel Only
         </div>
       </div>
     </div>

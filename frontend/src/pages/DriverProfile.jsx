@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
+import Swal from "sweetalert2";
 
 export default function DriverProfile() {
   const [form, setForm] = useState({
@@ -22,95 +23,33 @@ export default function DriverProfile() {
   }, []);
 
   const save = async () => {
-    await api.put("/driver/profile", form);
-    alert("Bio Data Saved");
+    await api.put("/driver/profile/bio", form);
+    Swal.fire("Saved", "Bio data updated", "success");
   };
 
   return (
     <>
       <Navbar />
+      <div className="min-h-screen bg-slate-100 p-6">
+        <div className="max-w-xl mx-auto bg-white p-6 rounded-xl shadow">
+          <h2 className="text-xl font-bold mb-4">Driver Bio Data</h2>
 
-      <div className="min-h-screen bg-slate-100 px-4 py-8">
-        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
+          {Object.keys(form).map(k => (
+            <input
+              key={k}
+              className="w-full border p-2 mb-3"
+              placeholder={k}
+              value={form[k]}
+              onChange={e => setForm({ ...form, [k]: e.target.value })}
+            />
+          ))}
 
-          {/* HEADER */}
-          <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">
-            Driver Bio Data
-          </h2>
-
-          {/* FORM */}
-          <div className="space-y-5">
-
-            {/* DESIGNATION */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Designation
-              </label>
-              <input
-                type="text"
-                placeholder="Enter Designation"
-                value={form.designation}
-                onChange={e =>
-                  setForm({ ...form, designation: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* BASIC PAY */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Basic Pay
-              </label>
-              <input
-                type="number"
-                placeholder="Enter Basic Pay"
-                value={form.basicPay}
-                onChange={e =>
-                  setForm({ ...form, basicPay: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* DATE OF ENTRY */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Entry
-              </label>
-              <input
-                type="date"
-                value={form.dateOfEntry}
-                onChange={e =>
-                  setForm({ ...form, dateOfEntry: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* DATE OF APPOINTMENT */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Appointment
-              </label>
-              <input
-                type="date"
-                value={form.dateOfAppointment}
-                onChange={e =>
-                  setForm({ ...form, dateOfAppointment: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* SAVE BUTTON */}
-            <button
-              onClick={save}
-              className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 transition duration-200 shadow-md"
-            >
-              Save Bio Data
-            </button>
-          </div>
+          <button
+            onClick={save}
+            className="w-full bg-green-600 text-white py-2 rounded"
+          >
+            Save
+          </button>
         </div>
       </div>
     </>

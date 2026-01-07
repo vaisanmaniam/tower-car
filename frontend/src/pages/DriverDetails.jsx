@@ -1,22 +1,37 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
+import {
+  User,
+  Building2,
+  IdCard,
+  ClipboardList,
+  Activity,
+  FileText
+} from "lucide-react";
 
 export default function DriverDetails() {
   const { driverId } = useParams();
   const [data, setData] = useState(null);
   const [logs, setLogs] = useState([]);
 
+useEffect(() => {
+  api.get(`/depot/driver/${driverId}`).then(res => {
+    setData(res.data);
+    setLogs(res.data.logs || []);
+  });
+}, [driverId]);
+
+
   useEffect(() => {
-    api.get(`/depot/driver/${driverId}`)
-      .then(res => setData(res.data));
+    if (!data?.pfNo) return;
 
     api.get("/depot/daily-logs")
       .then(res => {
-        const driverLogs = res.data.find(d => d.pfNo === data?.pfNo);
+        const driverLogs = res.data.find(d => d.pfNo === data.pfNo);
         if (driverLogs) setLogs(driverLogs.dailyLogs);
       });
-  }, [driverId, data?.pfNo]);
+  }, [data?.pfNo]);
 
   if (!data)
     return (
@@ -26,144 +41,180 @@ export default function DriverDetails() {
     );
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8">
-      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6">
+    <div className="min-h-screen bg-slate-100 px-4 py-6">
+      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8">
 
         {/* HEADER */}
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Driver Details
-        </h2>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Driver Details
+          </h2>
+          <p className="text-sm text-gray-500">
+            Complete profile & duty records (Read-Only)
+          </p>
+        </div>
 
         {/* BASIC INFO */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">Name</p>
-            <p className="font-semibold">{data.name}</p>
-          </div>
-
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">PF Number</p>
-            <p className="font-semibold">{data.pfNo}</p>
-          </div>
-
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">Depot</p>
-            <p className="font-semibold">{data.depotName}</p>
-          </div>
-        </div>
+        <Section title="Basic Information" icon={<User />}>
+          <InfoGrid>
+            <InfoCard label="Name" value={data.name} icon={<User />} />
+            <InfoCard label="PF Number" value={data.pfNo} icon={<IdCard />} />
+            <InfoCard label="Depot" value={data.depotName} icon={<Building2 />} />
+          </InfoGrid>
+        </Section>
 
         {/* BIO DATA */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            Bio Data
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Designation</p>
-              <p className="font-medium">
-                {data.profile.designation || "-"}
-              </p>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Basic Pay</p>
-              <p className="font-medium">
-                {data.profile.basicPay || "-"}
-              </p>
-            </div>
-          </div>
-        </div>
+        <Section title="Bio Data" icon={<ClipboardList />}>
+          <InfoGrid>
+            <InfoCard
+              label="Designation"
+              value={data.profile.designation || "-"}
+            />
+            <InfoCard
+              label="Basic Pay"
+              value={data.profile.basicPay || "-"}
+            />
+          </InfoGrid>
+        </Section>
 
         {/* TRAINING */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            Training Details
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Section</p>
-              <p className="font-medium">
-                {data.profile.training?.section || "-"}
-              </p>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Due Date</p>
-              <p className="font-medium">
-                {data.profile.training?.dueDate
+        <Section title="Training Details" icon={<Activity />}>
+          <InfoGrid>
+            <InfoCard
+              label="Section"
+              value={data.profile.training?.section || "-"}
+            />
+            <InfoCard
+              label="Training Due Date"
+              value={
+                data.profile.training?.dueDate
                   ? data.profile.training.dueDate.substring(0, 10)
-                  : "-"}
-              </p>
-            </div>
-          </div>
-        </div>
+                  : "-"
+              }
+            />
+          </InfoGrid>
+        </Section>
 
         {/* LR DETAILS */}
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            LR Details
-          </h3>
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">Due Date</p>
-            <p className="font-medium">
-              {data.profile.lrDetails?.dueDate
-                ? data.profile.lrDetails.dueDate.substring(0, 10)
-                : "-"}
-            </p>
-          </div>
-        </div>
+        <Section title="LR Details" icon={<FileText />}>
+          <InfoGrid>
+            <InfoCard
+              label="LR Due Date"
+              value={
+                data.profile.lrDetails?.dueDate
+                  ? data.profile.lrDetails.dueDate.substring(0, 10)
+                  : "-"
+              }
+            />
+          </InfoGrid>
+        </Section>
 
         {/* DAILY LOGS */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Daily Logs
-          </h3>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-              <thead className="bg-gray-100 text-gray-700 text-sm">
+        <Section title="Daily Duty Logs" icon={<ClipboardList />}>
+          <div className="overflow-x-auto rounded-xl border">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-100 text-gray-700">
                 <tr>
-                  <th className="px-3 py-2 border">Date</th>
-                  <th className="px-3 py-2 border">Sign In</th>
-                  <th className="px-3 py-2 border">Sign Out</th>
-                  <th className="px-3 py-2 border">KM</th>
-                  <th className="px-3 py-2 border">Hours</th>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Sign In</TableHead>
+                  <TableHead>Sign Out</TableHead>
+                  <TableHead>KM</TableHead>
+                  <TableHead>Hours</TableHead>
                 </tr>
               </thead>
-              <tbody className="text-sm">
+              <tbody>
                 {logs.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="text-center py-4 text-gray-500">
-                      No logs found
+                    <td colSpan="5" className="text-center py-6 text-gray-500">
+                      No duty logs available
                     </td>
                   </tr>
                 )}
 
-                {logs.map(l => (
-                  <tr key={l._id} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 border">
-                      {l.logDate.substring(0, 10)}
-                    </td>
-                    <td className="px-3 py-2 border">
-                      {new Date(l.signInTime).toLocaleTimeString()}
-                    </td>
-                    <td className="px-3 py-2 border">
-                      {l.signOutTime
-                        ? new Date(l.signOutTime).toLocaleTimeString()
+                {logs.map(log => (
+                  <tr
+                    key={log._id}
+                    className="hover:bg-slate-50 transition"
+                  >
+                    <TableCell>
+                      {log.logDate.substring(0, 10)}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(log.signInTime).toLocaleTimeString()}
+                    </TableCell>
+                    <TableCell>
+                      {log.signOutTime
+                        ? new Date(log.signOutTime).toLocaleTimeString()
                         : "-"}
-                    </td>
-                    <td className="px-3 py-2 border text-center">
-                      {l.km || "-"}
-                    </td>
-                    <td className="px-3 py-2 border text-center">
-                      {l.hours || "-"}
-                    </td>
+                    </TableCell>
+                    <TableCell center>{log.km || "-"}</TableCell>
+                    <TableCell center>{log.hours || "-"}</TableCell>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </Section>
 
-        </div>
       </div>
     </div>
+  );
+}
+
+/* -------------------- REUSABLE UI COMPONENTS -------------------- */
+
+function Section({ title, icon, children }) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="text-blue-700">{icon}</div>
+        <h3 className="text-lg font-semibold text-gray-800">
+          {title}
+        </h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function InfoGrid({ children }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {children}
+    </div>
+  );
+}
+
+function InfoCard({ label, value, icon }) {
+  return (
+    <div className="bg-slate-50 rounded-xl p-4 shadow-sm">
+      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+        {icon && <span className="text-gray-400">{icon}</span>}
+        {label}
+      </p>
+      <p className="font-semibold text-gray-800">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function TableHead({ children }) {
+  return (
+    <th className="px-3 py-3 border-b text-left font-semibold">
+      {children}
+    </th>
+  );
+}
+
+function TableCell({ children, center }) {
+  return (
+    <td
+      className={`px-3 py-2 border-b ${
+        center ? "text-center" : "text-left"
+      }`}
+    >
+      {children}
+    </td>
   );
 }
