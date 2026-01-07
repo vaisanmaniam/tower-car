@@ -1,6 +1,38 @@
 import User from "../models/User.js";
 import DailyLog from "../models/DailyLog.js";
 
+import DriverProfile from "../models/DriverProfile.js";
+
+export const getDriverFullProfile = async (req, res) => {
+  try {
+    const driverId = req.params.driverId;
+
+    // ensure driver belongs to same depot
+    const driver = await User.findOne({
+      _id: driverId,
+      role: "DRIVER",
+      depotName: req.user.depot
+    });
+
+    if (!driver) {
+      return res.status(403).json({ msg: "Access denied" });
+    }
+
+    const profile = await DriverProfile.findOne({ userId: driverId });
+
+    res.json({
+      name: driver.name,
+      pfNo: driver.pfNo,
+      depotName: driver.depotName,
+      profile
+    });
+
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+
 // Current function to get only drivers (keep it if needed)
 export const getDepotDrivers = async (req, res) => {
   const drivers = await User.find({

@@ -1,6 +1,32 @@
 import User from "../models/User.js";
 import DailyLog from "../models/DailyLog.js";
 
+export const getAdminUsers = async (req, res) => {
+  try {
+    const { depot } = req.query;
+
+    const filter = depot ? { depotName: depot } : {};
+
+    const managers = await User.find({
+      role: "DEPOT_MANAGER",
+      ...filter
+    }).select("name email depotName");
+
+    const drivers = await User.find({
+      role: "DRIVER",
+      ...filter
+    }).select("name pfNo depotName");
+
+    res.json({
+      managers,
+      drivers
+    });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+
 
 export const getAdminReport = async (req, res) => {
   const { from, to, depot } = req.query;

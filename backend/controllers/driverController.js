@@ -68,3 +68,17 @@ export const driverAlerts = async (req, res) => {
 
   res.json(alerts);
 };
+
+export const updateDriverProfile = async (req, res) => {
+  try {
+    const updated = await DriverProfile.findOneAndUpdate(
+      { userId: req.user.id },
+      req.body,
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};

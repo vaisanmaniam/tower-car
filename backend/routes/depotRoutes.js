@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyToken, allowRoles } from "../middleware/auth.js";
-import { getDepotDailyLogs, getDepotDrivers, getDepotReport } from "../controllers/depotController.js";
+import { getDepotDailyLogs, getDepotDrivers, getDepotReport, getDriverFullProfile } from "../controllers/depotController.js";
 
 const router = express.Router();
 
@@ -17,6 +17,14 @@ router.get(
   allowRoles("DEPOT_MANAGER"),
   getDepotReport
 );
+
+router.get(
+  "/driver/:driverId",
+  verifyToken,
+  allowRoles("DEPOT_MANAGER"),
+  getDriverFullProfile
+);
+
 
 
 export default router;
